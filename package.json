@@ -1,0 +1,23 @@
+{
+  "name": "about-you-scrapper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GautierE/about-you-scrapper.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GautierE/about-you-scrapper/issues"
+  },
+  "homepage": "https://github.com/GautierE/about-you-scrapper#readme",
+  "dependencies": {
+    "csv": "^6.2.0",
+    "got": "^12.4.1"
+  }
+}
