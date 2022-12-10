@@ -1,32 +1,60 @@
 import got from "got";
 import tough from "tough-cookie";
 
-const pidList = [
-  8600400, 7132808, 6954373, 7382308, 7444383, 7132808, 8809810, 7789288,
-  7778434, 6985548, 7105820, 7110820, 7196558, 8843199, 7610590, 7465636,
-  7786658, 8350130, 7130191, 7373277, 7720372, 7473348, 7155829, 7780083,
-  7616651, 7733118, 7117354,
+const pidList = [8600400, 7132808, 7778434, 6985548];
+
+const regions = [
+  { code: "fr", shopId: 658 },
+  { code: "de", shopId: 139 },
+  { code: "nl", shopId: 545 },
+  { code: "it", shopId: 671 },
+  { code: "es", shopId: 670 },
+  { code: "cz", shopId: 554 },
+  { code: "sk", shopId: 586 },
+  { code: "pt", shopId: 685 },
+  { code: "pl", shopId: 550 },
 ];
 
-getProduct(139, 9020202);
+const cookiejar = new tough.CookieJar();
+const client = got.extend({ cookieJar: cookiejar });
 
-async function getProduct(regionCode, productId) {
+for (let i = 0; i < regions.length; i++) {
+  await getSessionRegion(regions[i]);
+}
+
+async function getSessionRegion(region) {
   try {
-    const cookiejar = new tough.CookieJar();
-    const client = got.extend({ cookieJar: cookiejar });
-
+    console.log(`------ ${region.code.toUpperCase()} ------`);
     console.log("Getting session..");
-    await client.get("https://aboutyou.de");
+    await client.get(`https://aboutyou.${region.code}`);
 
     let session = "";
     cookiejar.store.findCookie(
-      "aboutyou.de",
+      `aboutyou.${region.code}`,
       "/",
       "ay-ab-test-user-id",
       (err, cookie) => (err ? console.log(err) : (session = cookie.value))
     );
 
-    console.log("Getting product info..");
+    await getAllForRegion(region, session);
+  } catch (e) {
+    console.log("Error getting product");
+    console.log(e.message);
+  }
+}
+
+async function getAllForRegion(region, session) {
+  for (let j = 0; j < pidList.length; j++) {
+    await getProductForRegion(region.shopId, pidList[j], session);
+    await sleep(1500);
+  }
+  console.log(`----------------------------------------`);
+  await sleep(3000);
+}
+
+async function getProductForRegion(shopId, productId, session) {
+  try {
+    console.log("Trying get product..");
 
     const res = await client.post(
       "https://api.aboutyou.com/user/me/wishlist/bapi?with=items.product.attributes:key(brand%7CbrandLogo%7CcaptchaRequired%7Cname%7CquantityPerPack%7CplusSize%7CcolorDetail%7CsponsorBadge%7CsponsoredType%7Cpremium%7CmaternityNursing%7Cexclusive%7Cgenderage%7CspecialSizesProduct%7CmaterialStyle%7CsustainabilityIcons%7CassortmentType),items.product.advancedAttributes:key(materialCompositionTextile%7Csiblings),items.product.variants,items.product.variants.attributes:key(shopSize%7CcategoryShopFilterSizes%7Ccup%7Ccupsize%7CvendorSize%7Clength%7Cdimension3%7CsizeType%7Csort),items.product.images.attributes:legacy(false):key(imageNextDetailLevel%7CimageBackground%7CimageFocus%7CimageGender%7CimageType%7CimageView),items.product.priceRange,items.product.lowestPriorPrice",
@@ -50,18 +78,22 @@ async function getProduct(regionCode, productId) {
         },
         searchParams: {
           with: "items.product.attributes:key(brand%7CbrandLogo%7CcaptchaRequired%7Cname%7CquantityPerPack%7CplusSize%7CcolorDetail%7CsponsorBadge%7CsponsoredType%7Cpremium%7CmaternityNursing%7Cexclusive%7Cgenderage%7CspecialSizesProduct%7CmaterialStyle%7CsustainabilityIcons%7CassortmentType),items.product.advancedAttributes:key(materialCompositionTextile%7Csiblings),items.product.variants,items.product.variants.attributes:key(shopSize%7CcategoryShopFilterSizes%7Ccup%7Ccupsize%7CvendorSize%7Clength%7Cdimension3%7CsizeType%7Csort),items.product.images.attributes:legacy(false):key(imageNextDetailLevel%7CimageBackground%7CimageFocus%7CimageGender%7CimageType%7CimageView),items.product.priceRange,items.product.lowestPriorPrice",
-          shopId: regionCode,
+          shopId: shopId,
           sId: session,
         },
-        body: `{"productId":9020202,"customData":{},"shopId":${regionCode}}`,
+        body: `{"productId":${productId},"customData":{},"shopId":${shopId}}`,
       }
     );
 
     res.body.includes("No variant for product id")
-      ? console.log("Product not loaded")
-      : console.log("Product loaded");
+      ? console.log(`Product ${productId} not loaded`)
+      : console.log(`Product ${productId} loaded`);
   } catch (e) {
     console.log("Error getting product");
     console.log(e.message);
   }
+}
+
+function sleep(duration) {
+  return new Promise((resolve) => setTimeout(resolve, duration));
 }
