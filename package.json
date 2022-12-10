@@ -1,5 +1,6 @@
 {
   "name": "about-you-scrapper",
+  "type": "module",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -18,6 +19,7 @@
   "homepage": "https://github.com/GautierE/about-you-scrapper#readme",
   "dependencies": {
     "csv": "^6.2.0",
-    "got": "^12.4.1"
+    "got": "^12.4.1",
+    "tough-cookie": "^4.1.2"
   }
 }
